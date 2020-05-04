@@ -7,8 +7,24 @@
 body
 {
   background-color:#FFF0F5;
+  #background-color:#F5F5DC;
   font-family:Roboto, sans-serif;
   font-size:16px;
+  color:#000000;
+}
+
+a
+{
+	color:#457D72;
+	font-weight: bold;
+	text-decoration: none;
+}
+
+a:hover
+{
+	#color:#E1F4F0;
+	font-weight: bold;
+	text-decoration: underline;
 }
 
 .header
@@ -16,10 +32,10 @@ body
 	background-color:#F5F5F5;
 	width: 100%;
 	margin:auto;
-	text-align: center;
+	text-align: left;
 	padding-bottom:10px;
 	font-family: Candara;
-	font-size: 50px;
+	font-size: 16px;
 }
 
 .container
@@ -40,7 +56,8 @@ body
 	margin:0px;
 	width:200px;
 	vertical-align: top;
-	background-color:#80ced6;
+	background-color:#BBE8DF;
+	#background-color:#eeeeee;
 	padding:10px;
 	float:left;
 }
@@ -57,7 +74,7 @@ body
 
 hr
 {
-	border: 1px solid #000000;
+	border: 1px solid #666666;
 }
 
 h2
@@ -72,7 +89,7 @@ p
 	width:500px;
 }
 
-ol
+ul, ol
 {
 	list-style-type:none;
 }
