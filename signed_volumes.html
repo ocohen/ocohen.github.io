@@ -14,71 +14,63 @@
 <title>Signed volumes and GJK</title><link rel="stylesheet" type="text/css" href="style.css"></head><body><hr><div class="container"><div class="menu"><div class="menu_top"><a href="index.html">Home</a></div><ol><li><a href="gtest.html">Run subset of gtest tests</a></li><li><a href="forward_declare_tuniqueptr.html">UE4 Forward declare a TUniquePtr inside a UObject</a></li><li><a href="support.html">Support functions with non uniform scaling</a></li><li><a href="signed_volumes.html">Signed volumes and GJK</a></li><li><a href="ctags.html">Automatically update ctags on file save</a></li><li><a href="make_includes.html">Automatic include dependencies for Make</a></li><li><a href="ispc.html">Using ISPC with Visual Studio</a></li></ol></div><div class="content"><h2>Signed volumes and GJK</h2>
 <h3>
 Triangles</h3>
-A triangle <b>ABC</b> with vertices <b>a,b,c</b>&nbsp;has a signed area.<br />
-The sign is determined by the direction of its normal.<br />
-If <b>a&nbsp;</b>is at the origin we can compute the area like so:<br />
-<br />
-$\text{area}(\bigtriangleup ABC) = \text{area}(\bigtriangleup OBC)&nbsp;= \frac{1}{2} \cdot \begin{vmatrix} b_u &amp; c_u\\b_v &amp; c_v\end{vmatrix}$
-<br />
-Where u,v are a 2d subspace spanned by the triangle. Note that this is really just the cross product dotted with the normal of the u,v sub-space.<br />
-<br />
-If <b>a&nbsp;</b>is not at the origin we can still compute its area like so:<br />
-$\text{area}(\bigtriangleup ABC) = \frac{1}{2} \cdot \begin{vmatrix} a_u &amp; b_u &amp; c_u\\a_v &amp; b_v &amp; c_v\\1&amp;1&amp;1\end{vmatrix}$<br />
-<br />
-This expands to summing the area of three triangles that start at the origin:<br />
-<br />
-$\text{area}(\bigtriangleup ABC) = \text{area}(\bigtriangleup OAB) + \text{area}(\bigtriangleup OBC) + \text{area}(\bigtriangleup OCA)$<br />
-<br />
-Note that the sub triangles' winding is the same as <b>ABC</b>. This means that if the origin is inside <b>ABC</b>&nbsp;then the sub triangle areas will all have the same sign and will each contribute to the total area.<br />
-<br />
-If the origin is outside of the triangle some sub areas will be positive and some will be negative. The outside sub-areas will cancel out leaving just the inside region giving the right total area.<br />
-<br />
+<p>
+A triangle <b>ABC</b> with vertices <b>a,b,c</b>&nbsp;has a signed area.
+The sign is determined by the direction of its normal.
+If <b>a&nbsp;</b>is at the origin we can compute the area like so:
+</p>
+<p>
+$\text{area}(\bigtriangleup ABC) = \text{area}(\bigtriangleup OBC)&nbsp;= \frac{1}{2} \cdot \begin{vmatrix} b_u &amp; c_u\\b_v &amp; c_v\end{vmatrix}$</p>
+<p>
+Where u,v are a 2d subspace spanned by the triangle. Note that this is really just the cross product dotted with the normal of the u,v sub-space.</p>
+<p>
+If <b>a&nbsp;</b>is not at the origin we can still compute its area like so:</p>
+<p>
+$\text{area}(\bigtriangleup ABC) = \frac{1}{2} \cdot \begin{vmatrix} a_u &amp; b_u &amp; c_u\\a_v &amp; b_v &amp; c_v\\1&amp;1&amp;1\end{vmatrix}$</p>
+<p>
+This expands to summing the area of three triangles that start at the origin:</p>
+<p>
+$\text{area}(\bigtriangleup ABC) = \text{area}(\bigtriangleup OAB) + \text{area}(\bigtriangleup OBC) + \text{area}(\bigtriangleup OCA)$</p>
+<p>
+Note that the sub triangles' winding is the same as <b>ABC</b>. This means that if the origin is inside <b>ABC</b>&nbsp;then the sub triangle areas will all have the same sign and will each contribute to the total area.</p>
+<p>
+If the origin is outside of the triangle some sub areas will be positive and some will be negative. The outside sub-areas will cancel out leaving just the inside region giving the right total area.</p>
 <h3>
 Tetrahedron</h3>
-<div>
-The same concept applies for a tetrahedron <b>ABCD </b>with vertices <b>a,b,c,d</b></div>
-<div>
-In the case where <b>a</b> is at the origin we can compute the volume like so:</div>
-<div>
-$\text{vol}(ABCD) = \text{vol}(OBCD) = \frac{1}{6} \cdot \begin{vmatrix} b_x &amp; c_x &amp; d_x\\b_y &amp; c_y &amp; d_y\\b_z &amp; c_z &amp; d_z\end{vmatrix}$</div>
-<div>
-<br /></div>
-<div>
-This is really just</div>
-<div>
-<br /></div>
-<div>
-$\frac{1}{6} \cdot b \cdot (c \times d)$</div>
-<div>
-<br /></div>
-<div>
-If <b>a </b>is not at the origin we can still compute the volume</div>
-<div>
-$\text{vol}(ABCD) = \frac{1}{6} \times \begin{vmatrix}a_x &amp; b_x &amp; c_x &amp; d_x\\a_y &amp; b_y &amp; c_y &amp; d_y\\a_z &amp; b_z &amp; c_z &amp; d_z\\1&amp;1&amp;1&amp;1\end{vmatrix}$</div>
-<div>
-<br /></div>
-<div>
-Note that this is actually adding the volume of four tetrahedrons that start at the origin.</div>
-<div>
-<br /></div>
-<div>
-$\text{vol}(ABCD) = \text{vol}(OACD) + \text{vol}(OABC) +\text{vol}(OBDC) + \text{vol}(OADB)$</div>
-<div>
-<br /></div>
-<div>
-If the origin is inside the tetrahedron the 4 sub-volumes will all have the same sign as the signed volume of <b>ABCD</b>. If the origin is on the outside, some volumes will be positive and some will be negative. Just like the triangle case, the outside regions will cancel out leaving the correct total volume.</div>
-<div>
-<br /></div>
+<p>
+The same concept applies for a tetrahedron <b>ABCD </b>with vertices <b>a,b,c,d</b></p>
+<p>
+In the case where <b>a</b> is at the origin we can compute the volume like so:</p>
+
+<p>
+$\text{vol}(ABCD) = \text{vol}(OBCD) = \frac{1}{6} \cdot \begin{vmatrix} b_x &amp; c_x &amp; d_x\\b_y &amp; c_y &amp; d_y\\b_z &amp; c_z &amp; d_z\end{vmatrix}$</p>
+<p>
+This is really just</p>
+<p>
+$\frac{1}{6} \cdot b \cdot (c \times d)$</p>
+<p>
+If <b>a </b>is not at the origin we can still compute the volume</p>
+
+<p>
+$\text{vol}(ABCD) = \frac{1}{6} \times \begin{vmatrix}a_x &amp; b_x &amp; c_x &amp; d_x\\a_y &amp; b_y &amp; c_y &amp; d_y\\a_z &amp; b_z &amp; c_z &amp; d_z\\1&amp;1&amp;1&amp;1\end{vmatrix}$</p>
+<p>
+Note that this is actually adding the volume of four tetrahedrons that start at the origin.</p>
+
+<p>
+$\text{vol}(ABCD) = \text{vol}(OACD) + \text{vol}(OABC) +\text{vol}(OBDC) + \text{vol}(OADB)$
+</p>
+
+<p>
+If the origin is inside the tetrahedron the 4 sub-volumes will all have the same sign as the signed volume of <b>ABCD</b>. If the origin is on the outside, some volumes will be positive and some will be negative. Just like the triangle case, the outside regions will cancel out leaving the correct total volume.
+</p>
 <h3>
 Closest point to origin</h3>
-<div>
-When evaluating GJK we must find the closet point to the origin on both a tetrahedron and a triangle. Using signed volumes we can determine the right voronoi regions to search. If the sub-volumes (or sub-areas) all have the same sign as the tetrahedron (or triangle) then the origin must be contained within the tetrahedron (or triangle). If any of the sub-volumes (or sub-areas) have the opposite sign then the origin is "seen" by the corresponding triangle (or edge).</div>
-<div>
-<br /></div>
-<div>
-It's possible to have multiple sub-volumes (or sub-areas) with the opposite sign as the original tetrahedron (or triangle). This indicates the origin is "seen" by multiple triangles (or edges). In this case we must compute the closest point for each candidate voronoi region and return the closest one. An example of a case where multiple regions need to be searched is an obtuse triangle where the origin can see two edges at once, but is ultimately closer to one of them.</div>
-<div>
-<br /></div>
-<div>
+<p>
+When evaluating GJK we must find the closet point to the origin on both a tetrahedron and a triangle. Using signed volumes we can determine the right voronoi regions to search. If the sub-volumes (or sub-areas) all have the same sign as the tetrahedron (or triangle) then the origin must be contained within the tetrahedron (or triangle). If any of the sub-volumes (or sub-areas) have the opposite sign then the origin is "seen" by the corresponding triangle (or edge).
+</p>
+<p>
+It's possible to have multiple sub-volumes (or sub-areas) with the opposite sign as the original tetrahedron (or triangle). This indicates the origin is "seen" by multiple triangles (or edges). In this case we must compute the closest point for each candidate voronoi region and return the closest one. An example of a case where multiple regions need to be searched is an obtuse triangle where the origin can see two edges at once, but is ultimately closer to one of them.
+</p>
+<p>
 Further details on using signed volumes with GJK can be found here:&nbsp;<a href="https://ora.ox.ac.uk/objects/uuid:69c743d9-73de-4aff-8e6f-b4dd7c010907/download_file?safe_filename=GJK.PDF&amp;file_format=application%2Fpdf&amp;type_of_work=Journal+article">Improving the GJK algorithm for faster and more reliable distance queries between convex objects</a></div>
-<div class="date">Posted May 01 2019</div></div></body></html>
+</p><div class="date">Posted May 01 2019</div></div></body></html>
