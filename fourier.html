@@ -1,0 +1,195 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+	<script type='text/x-mathjax-config'>
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+      processEscapes: true
+    },
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+<script async='async' src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS-MML_HTMLorMML' type='text/javascript'>
+</script>
+<title>Discrete Fourier Transform</title><link rel="stylesheet" type="text/css" href="style.css"></head><body><hr><div class="container"><div class="menu"><div class="menu_top"><a href="index.html">Home</a></div><ol><li><a href="fourier.html">Discrete Fourier Transform</a></li><li><a href="gtest.html">Run subset of gtest tests</a></li><li><a href="forward_declare_tuniqueptr.html">UE4 Forward declare a TUniquePtr inside a UObject</a></li><li><a href="support.html">Support functions with non uniform scaling</a></li><li><a href="signed_volumes.html">Signed volumes and GJK</a></li><li><a href="ctags.html">Automatically update ctags on file save</a></li><li><a href="make_includes.html">Automatic include dependencies for Make</a></li><li><a href="ispc.html">Using ISPC with Visual Studio</a></li></ol></div><div class="content"><h2>Discrete Fourier Transform</h2>
+Function:
+<input type="text" id="function" value="sin(x/10)*sqrt(x)" /><br />
+Num samples:
+<input type="text" id="samples" value="50" /> <br />
+Compression:
+<input type="text" id="compression" value="100" /> <br />
+Show samples:
+<input type="checkbox" id="showSamples" />
+<br />
+<canvas width=400 height=400 id="graph" style="background-color:#ffffff"></canvas>
+<canvas width=400 height=400 id="frequencies" style="background-color:#ffffff"></canvas>
+<script>
+var h = 16;
+var canvas1;
+var canvas2;
+
+plot_fourier = function(f,samples, showSamples, compression)
+{
+    if(samples > canvas1.width)
+    {
+        samples = canvas1.width;
+    }
+
+    f_cont = discretize(f, canvas1.width, canvas1.width);
+
+    let maxY = -9999999999;
+    let minY = -maxY;
+    for(let i=0; i<f_cont.length; i++)
+    {
+        if(f_cont[i][1] > maxY)
+        {
+            maxY = f_cont[i][1];
+        }
+
+        if(f_cont[i][1] < minY)
+        {
+            minY = f_cont[i][1];
+        }
+    }
+
+    f_discrete = discretize(f, samples, canvas1.width);
+    N = f_discrete.length;  //discrete may add 1 extra sample if right on edge
+    xs = [];
+    let original_mags = [];
+    let maxYf = maxY;
+    let minYf = -maxYf
+    for(k=0; k<N; k++)
+    {
+        let X_k = dft(f_discrete, k);
+        xs.push(X_k);
+        original_mags.push([k, X_k[0]*X_k[0] + X_k[1]*X_k[1]]);
+
+        if(X_k[0] > maxYf)
+        {
+            maxYf = X_k[0];
+        }
+
+        if(X_k[1] > maxYf)
+        {
+            maxYf = X_k[1];
+        }
+
+        if(X_k[0] < minYf)
+        {
+            minYf = X_k[0];
+        }
+
+        if(X_k[1] < minYf)
+        {
+            minYf = X_k[1];
+        }
+    }
+
+    if(maxY == minY)
+    {
+        maxY += 1;
+        minY -= 2;
+    }
+
+    f_fourier = [];
+    for(n=0; n<canvas1.width; n++)
+    {
+        //want to interpolate between the N sample points
+        //but must be that at each sample point we get exactly the index
+        //0 -> 0
+        //width -> N-1
+        //Tx + c = x'
+        //T0 + c = 0 => c = 0
+        //Twidth = N-1 => T = (N-1) / width
+        let x_n = idft(xs, n * (N-1) / (canvas1.width) );
+        f_fourier.push(x_n[0]);
+    }
+
+    let tl = [0,maxY];
+    let br = [canvas1.width,minY];
+
+    plotPoints(canvas1, f_cont ,tl, br, '#000000');
+    if(showSamples)
+    {
+        plotPointsNoLine(canvas1, f_discrete,tl, br, '#0000ff', 3);
+    }
+
+    plotList(canvas1, f_fourier,tl, br, '#ff0000');
+    plotGrid(canvas1, tl, br, '#000000');
+
+    let half_info = get_halfN(N);
+    let halfN = half_info[0];
+    let oddN = half_info[1];
+    let reals = [];
+    let imaginaries = [];
+    let mags = [];
+
+    let maxWeight = -9999999;
+    let minWeight = 9999999;
+
+    for(let k=-halfN; k<= halfN; k++)
+    {
+        let X_k = get_coefficient(xs, k, halfN, oddN);
+        reals.push([k, X_k[0]]);
+        imaginaries.push([k, X_k[1]]);
+        let mag = Math.sqrt(X_k[0]*X_k[0] + X_k[1]*X_k[1]);
+        mags.push([k, mag]);
+
+        if(mag > maxWeight){ maxWeight = mag; }
+        if(mag < minWeight){ minWeight = mag; }
+    }
+
+    let tl2 = [-halfN, maxWeight];
+    let br2 = [halfN, minWeight];
+    plotPoints(canvas2, mags, tl2, br2, '#ff0000');
+    plotGrid(canvas2, tl2, br2, '#000000');
+
+    original_mags.sort(function(a,b){ return b[1] - a[1]; });
+    let last = N * compression / 100;
+    for(let i=last+1; i< N; i++)
+    {
+        let idx = original_mags[i][0];
+        xs[idx] = [0,0];
+    }
+
+    compressed = [];
+    for(n=0; n<canvas1.width; n++)
+    {
+        let x_n = idft(xs, n * (N-1) / (canvas1.width) );
+        compressed.push(x_n[0]);
+    }
+
+    plotList(canvas1, compressed,tl, br, '#000fff');
+}
+
+update = function()
+{
+    clear(canvas1);
+    clear(canvas2);
+    let N = parseInt(document.getElementById("samples").value);
+    let compression = parseInt(document.getElementById("compression").value);
+    let f = (x)=>
+    {
+        try
+        {
+            with(Math){ return eval(document.getElementById("function").value); }
+        }
+        catch(error)
+        {
+            return undefined;
+        }
+    };
+    showSamples = document.getElementById("showSamples").checked;
+    plot_fourier(f,N, showSamples, compression);
+}
+
+init = function()
+{
+    canvas1 = document.getElementById("graph");
+    canvas2 = document.getElementById("frequencies");
+}
+
+</script>
+
+<script type="text/javascript" src="draw.js"></script>
+<script type="text/javascript" src="math.js"></script><div class="date">Posted May 07 2020</div></div></body></html>
