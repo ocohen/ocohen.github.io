@@ -1,0 +1,27 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+	<script type='text/x-mathjax-config'>
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+      processEscapes: true
+    },
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+<script async='async' src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS-MML_HTMLorMML' type='text/javascript'>
+</script>
+<title>Using ISPC with Visual Studio</title><link rel="stylesheet" type="text/css" href="style.css"></head><body><hr><div class="container"><div class="menu"><div class="menu_top"><a href="index.html">Home</a></div><ol><li><a href="gtest.html">Run subset of gtest tests</a></li><li><a href="forward_declare_tuniqueptr.html">UE4 Forward declare a TUniquePtr inside a UObject</a></li><li><a href="support.html">Support functions with non uniform scaling</a></li><li><a href="signed_volumes.html">Signed volumes and GJK</a></li><li><a href="ctags.html">Automatically update ctags on file save</a></li><li><a href="make_includes.html">Automatic include dependencies for Make</a></li><li><a href="ispc.html">Using ISPC with Visual Studio</a></li></ol></div><div class="content"><h2>Using ISPC with Visual Studio</h2>
+<div class="column">
+You can get visual studio to automatically compile ISPC files by associating the ispc extension with a custom build target. This information comes from <a href="http://reedbeta.com/blog/custom-toolchain-with-msbuild/">Nathan Reed</a><br />
+<br />
+To get this to work simply copy and paste the ispc.xml: <script src="https://gist.github.com/ocohen/60fa1e1a05dd99e58dff752250239a4f.js"></script>
+
+and ispc.targets:<script src="https://gist.github.com/ocohen/4a5aba1fc4177b388ddd0ec09f81bdcc.js"></script>
+
+ and place them alongside your .vcxproj file. Inside Visual Studio right click on your project and select Build Dependencies -&gt; Build Customization. Select Find Existing and locate the ispc.targets file. You may need to re-add ispc files into your project in order to compile them initially. You will need ispc.exe to be in your windows PATH.<br />
+<br />
+This should give incremental compiling and error messages. However, I could not find an easy way to automatically link against the generated .o files so you will need to manually add them as additional linker inputs.<br />
+<br />
+The generated files are &lt;file&gt;.ispc.h and &lt;file&gt;.ispc.o
+</div><div class="date">Posted Mar 25 2019</div></div></body></html>

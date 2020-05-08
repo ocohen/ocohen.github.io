@@ -54,12 +54,13 @@ a:hover
 .menu
 {
 	margin:0px;
-	width:200px;
+	width:300px;
 	vertical-align: top;
 	background-color:#BBE8DF;
 	#background-color:#eeeeee;
 	padding:10px;
 	float:left;
+	font-size:12px;
 }
 
 .menu_top
@@ -68,8 +69,10 @@ a:hover
 	padding-bottom: 10px;
 }
 
-.footer
+.date
 {
+	font-size: 12px;
+	padding-top: 30px;
 }
 
 hr
@@ -86,7 +89,12 @@ h2
 p
 {
 	padding-bottom:30px;
-	width:500px;
+	width:600px;
+}
+
+.column
+{
+	width:600px;
 }
 
 ul, ol
@@ -97,4 +105,12 @@ ul, ol
 li
 {
 	padding-bottom:3px;
+}
+
+.code_inline
+{
+	background-color: #BBE8DF;
+	color: #242729;
+	font-family: Consolas, Menlo, Monaco, &quot;Lucida Console&quot;, &quot;Liberation Mono&quot;, &quot;DejaVu Sans Mono&quot;, &quot;Bitstream Vera Sans Mono&quot;, &quot;Courier New&quot;, monospace, sans-serif;
+	font-size: 13px; white-space: pre-wrap;
 }

@@ -1,0 +1,31 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+	<script type='text/x-mathjax-config'>
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+      processEscapes: true
+    },
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+<script async='async' src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS-MML_HTMLorMML' type='text/javascript'>
+</script>
+<title>Support functions with non uniform scaling</title><link rel="stylesheet" type="text/css" href="style.css"></head><body><hr><div class="container"><div class="menu"><div class="menu_top"><a href="index.html">Home</a></div><ol><li><a href="gtest.html">Run subset of gtest tests</a></li><li><a href="forward_declare_tuniqueptr.html">UE4 Forward declare a TUniquePtr inside a UObject</a></li><li><a href="support.html">Support functions with non uniform scaling</a></li><li><a href="signed_volumes.html">Signed volumes and GJK</a></li><li><a href="ctags.html">Automatically update ctags on file save</a></li><li><a href="make_includes.html">Automatic include dependencies for Make</a></li><li><a href="ispc.html">Using ISPC with Visual Studio</a></li></ol></div><div class="content"><h2>Support functions with non uniform scaling</h2>
+Given a support function $S_{\text{obj}}(d)$ and a non uniform scale vector you can create a new support function<br />$S_{\text{scaled}}(d) = S(d * scale) * scale$<br />
+where * denotes a component wise vector multiplication.<br />
+<br />
+Consider that $S_{\text{obj}}(d) = \{\ x\ |\ x \cdot d \ge y \cdot d\ \forall x,y \in \text{obj}\}$<br />
+Then if we apply a transform to all points in obj the statement becomes:<br />
+$S_{\text{scaled}}(d) = \{\ Ax\ |\ Ax \cdot d \ge Ay \cdot d \ \forall x,y \in obj\}$<br />
+But note:<br />
+<br />
+$Ax \cdot d = d^T Ax = (d^T A) x = (A^Td)^T x = x \cdot A^T d$<br />
+<br />
+In the case of non uniform scale A is a diagonal matrix so $A^Td$ is simply a component wise vector multiplication.<br />
+<br />
+Remember that $S_{\text{obj}}(A^T d) = \{\ x\&nbsp; |\ x \cdot A^T d \ge y \cdot A^T d\}$, but&nbsp; $S_{\text{scaled}}$ must return<br/>$Ax$, so we need to multiply the result by $A^T$, which in the case of non uniform scale requires&nbsp;a second component wise vector multiplication.<br />
+<br />
+The general matrix works as well:<br />
+<br />
+$S_A(d) = A\ S(A^T d)$<div class="date">Posted May 13 2019</div></div></body></html>
