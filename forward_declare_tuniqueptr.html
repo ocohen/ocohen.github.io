@@ -1,17 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
-	<script type='text/x-mathjax-config'>
-  MathJax.Hub.Config({
-    tex2jax: {
-      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
-      displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
-      processEscapes: true
-    },
-    "HTML-CSS": { availableFonts: ["TeX"] }
-  });
-</script>
-<script async='async' src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS-MML_HTMLorMML' type='text/javascript'>
-</script>
-<title>UE4 Forward declare a TUniquePtr inside a UObject</title><link rel="stylesheet" type="text/css" href="style.css"></head><body><hr><div class="container"><div class="menu"><div class="menu_top"><a href="index.html">Home</a></div><ol><li><a href="fourier.html">Discrete Fourier Transform</a></li><li><a href="gtest.html">Run subset of gtest tests</a></li><li><a href="forward_declare_tuniqueptr.html">UE4 Forward declare a TUniquePtr inside a UObject</a></li><li><a href="support.html">Support functions with non uniform scaling</a></li><li><a href="signed_volumes.html">Signed volumes and GJK</a></li><li><a href="ctags.html">Automatically update ctags on file save</a></li><li><a href="make_includes.html">Automatic include dependencies for Make</a></li><li><a href="ispc.html">Using ISPC with Visual Studio</a></li></ol></div><div class="content"><h2>UE4 Forward declare a TUniquePtr inside a UObject</h2>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>UE4 Forward declare a TUniquePtr inside a UObject</title><link rel="stylesheet" type="text/css" href="style.css"></head><body><div class="column"><div class="header"><a href="index.html">Home</a></div><hr><div class="content"><h2>UE4 Forward declare a TUniquePtr inside a UObject</h2>
 <p>
 If you have a UObject with a TUniquePtr of a forward declared type, you need to declare a special constructor as well as the destructor. Then define them in a cpp that has the needed includes.<br />
 For example see UBodySetup:</p>
@@ -24,4 +11,4 @@ UBodySetup::UBodySetup(FVTableHelper& Helper)
 }
 
 UBodySetup::~UBodySetup() = default;
-</pre><div class="date">Posted Apr 07 2020</div></div></body></html>
+</pre><div class="footer">Apr 07 2020<br /><a href="index.html">Home</a></div></div></div></body></html>

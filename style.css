@@ -27,28 +27,35 @@ a:hover
 	text-decoration: underline;
 }
 
+.column
+{
+	width:600px;
+	margin:auto;
+}
+
+.column_wide
+{
+	width:850px;
+	margin:auto;
+}
+
 .header
 {
-	background-color:#F5F5F5;
+	#background-color:#0A0A0A;
 	width: 100%;
 	margin:auto;
 	text-align: left;
+	padding-top:10px;
 	padding-bottom:10px;
 	font-family: Candara;
-	font-size: 16px;
-}
-
-.container
-{
-
+	font-size: 36px;
+	vertical-align: middle;
 }
 
 .content
 {
-	width:auto;
 	vertical-align: top;
 	padding:10px;
-	overflow:hidden;
 }
 
 .menu
@@ -69,10 +76,11 @@ a:hover
 	padding-bottom: 10px;
 }
 
-.date
+.footer
 {
 	font-size: 12px;
 	padding-top: 30px;
+	text-align: center;
 }
 
 hr
@@ -83,17 +91,14 @@ hr
 h2
 {
 	font-size:24px;
-	padding-bottom: 10px;
+	padding-top:15px;
+	padding-bottom:15px;
 }
 
 p
 {
-	padding-bottom:30px;
-	width:600px;
-}
-
-.column
-{
+	padding-top:15px;
+	padding-bottom:15px;
 	width:600px;
 }
 

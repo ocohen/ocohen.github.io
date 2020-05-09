@@ -1,17 +1,17 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
-	<script type='text/x-mathjax-config'>
-  MathJax.Hub.Config({
-    tex2jax: {
-      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
-      displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
-      processEscapes: true
-    },
-    "HTML-CSS": { availableFonts: ["TeX"] }
-  });
-</script>
-<script async='async' src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS-MML_HTMLorMML' type='text/javascript'>
-</script>
-<title>Signed volumes and GJK</title><link rel="stylesheet" type="text/css" href="style.css"></head><body><hr><div class="container"><div class="menu"><div class="menu_top"><a href="index.html">Home</a></div><ol><li><a href="fourier.html">Discrete Fourier Transform</a></li><li><a href="gtest.html">Run subset of gtest tests</a></li><li><a href="forward_declare_tuniqueptr.html">UE4 Forward declare a TUniquePtr inside a UObject</a></li><li><a href="support.html">Support functions with non uniform scaling</a></li><li><a href="signed_volumes.html">Signed volumes and GJK</a></li><li><a href="ctags.html">Automatically update ctags on file save</a></li><li><a href="make_includes.html">Automatic include dependencies for Make</a></li><li><a href="ispc.html">Using ISPC with Visual Studio</a></li></ol></div><div class="content"><h2>Signed volumes and GJK</h2>
+		<script type='text/x-mathjax-config'>
+	  MathJax.Hub.Config({
+	    tex2jax: {
+	      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+	      displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+	      processEscapes: true
+	    },
+	    "HTML-CSS": { availableFonts: ["TeX"] }
+	  });
+	</script>
+	<script async='async' src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS-MML_HTMLorMML' type='text/javascript'>
+	</script>
+	<title>Signed volumes and GJK</title><link rel="stylesheet" type="text/css" href="style.css"></head><body><div class="column"><div class="header"><a href="index.html">Home</a></div><hr><div class="content"><h2>Signed volumes and GJK</h2>
 <h3>
 Triangles</h3>
 <p>
@@ -72,5 +72,5 @@ When evaluating GJK we must find the closet point to the origin on both a tetrah
 It's possible to have multiple sub-volumes (or sub-areas) with the opposite sign as the original tetrahedron (or triangle). This indicates the origin is "seen" by multiple triangles (or edges). In this case we must compute the closest point for each candidate voronoi region and return the closest one. An example of a case where multiple regions need to be searched is an obtuse triangle where the origin can see two edges at once, but is ultimately closer to one of them.
 </p>
 <p>
-Further details on using signed volumes with GJK can be found here:&nbsp;<a href="https://ora.ox.ac.uk/objects/uuid:69c743d9-73de-4aff-8e6f-b4dd7c010907/download_file?safe_filename=GJK.PDF&amp;file_format=application%2Fpdf&amp;type_of_work=Journal+article">Improving the GJK algorithm for faster and more reliable distance queries between convex objects</a></div>
-</p><div class="date">Posted May 01 2019</div></div></body></html>
+Further details on using signed volumes with GJK can be found here:&nbsp;<a href="https://ora.ox.ac.uk/objects/uuid:69c743d9-73de-4aff-8e6f-b4dd7c010907/download_file?safe_filename=GJK.PDF&amp;file_format=application%2Fpdf&amp;type_of_work=Journal+article">Improving the GJK algorithm for faster and more reliable distance queries between convex objects</a>
+</p><div class="footer">May 01 2019<br /><a href="index.html">Home</a></div></div></div></body></html>

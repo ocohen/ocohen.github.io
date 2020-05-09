@@ -1,18 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
-	<script type='text/x-mathjax-config'>
-  MathJax.Hub.Config({
-    tex2jax: {
-      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
-      displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
-      processEscapes: true
-    },
-    "HTML-CSS": { availableFonts: ["TeX"] }
-  });
-</script>
-<script async='async' src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS-MML_HTMLorMML' type='text/javascript'>
-</script>
-<title>Automatic include dependencies for Make</title><link rel="stylesheet" type="text/css" href="style.css"></head><body><hr><div class="container"><div class="menu"><div class="menu_top"><a href="index.html">Home</a></div><ol><li><a href="fourier.html">Discrete Fourier Transform</a></li><li><a href="gtest.html">Run subset of gtest tests</a></li><li><a href="forward_declare_tuniqueptr.html">UE4 Forward declare a TUniquePtr inside a UObject</a></li><li><a href="support.html">Support functions with non uniform scaling</a></li><li><a href="signed_volumes.html">Signed volumes and GJK</a></li><li><a href="ctags.html">Automatically update ctags on file save</a></li><li><a href="make_includes.html">Automatic include dependencies for Make</a></li><li><a href="ispc.html">Using ISPC with Visual Studio</a></li></ol></div><div class="content"><h2>Automatic include dependencies for Make</h2>
-<div class="column">
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Automatic include dependencies for Make</title><link rel="stylesheet" type="text/css" href="style.css"></head><body><div class="column"><div class="header"><a href="index.html">Home</a></div><hr><div class="content"><h2>Automatic include dependencies for Make</h2>
+<div>
 Here is a Makefile that automatically generates header includes as dependencies. This information comes from <a href="http://www.microhowto.info/howto/automatically_generate_makefile_dependencies.html">Graham Shaw</a>
 
 <br />
@@ -21,4 +8,4 @@ Here is a Makefile that automatically generates header includes as dependencies.
 <br />
 This works because if there is no explicit rule for a .o target, Make will automatically create one using&nbsp;<span class="code_inline">$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c.&nbsp;</span><br /><br />
 So the first time we try to compile a file we use the implicit rule and the -MP -MD will generated a dependency file. Any time after that the .o rule is included since the dependency file exists.
-</div><div class="date">Posted Mar 30 2019</div></div></body></html>
+</div><div class="footer">Mar 30 2019<br /><a href="index.html">Home</a></div></div></div></body></html>
