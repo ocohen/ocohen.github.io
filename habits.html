@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Habits</title>
+<style>
+	div.btn {
+		background-color:#aaaaaa;
+		color:#ffffff;
+		display:inline-block;
+		width:75px;
+		height:75px;
+		text-align:center;
+		line-height:75px;
+		user-select:none;
+		cursor:pointer;
+		font-family:sans-serif;
+		font-weight:bold;
+		font-size:18px;
+		margin:10px;
+	}
+
+	div.selected
+	{
+		background-color:#559955;
+	}
+
+	div.container
+	{
+		text-align:center;
+		padding:0;
+		margin:0px;
+	}
+	body, html
+	{
+		height:100%;
+		padding:0;
+		margin:0;
+		background-color:#121213;
+	}
+	h1
+	{
+		text-align:center;
+		color:#ffffff;
+		padding-top:0;
+		margin-top:0;
+	}
+</style>
+  </head>
+  <body>
+	  <div id = "stage">
+	  <div class="container">
+		  <div class="btn">Sleep</div>
+		  <div class="btn selected">Work</div>
+		  <div class="btn">Fitness</div>
+		  <div class="btn">Diet</div>
+		  <div class="btn">Projects</div>
+	  </div>
+
+	  <div class="container">
+		  <div class="btn"></div>
+		  <div class="btn selected"></div>
+		  <div class="btn"></div>
+		  <div class="btn selected"></div>
+		  <div class="btn"></div>
+	  </div>
+	  <div class="container">
+		  <div class="btn"></div>
+		  <div class="btn selected"></div>
+		  <div class="btn"></div>
+		  <div class="btn selected"></div>
+		  <div class="btn"></div>
+	  </div>
+	  <div class="container">
+		  <div class="btn selected"></div>
+		  <div class="btn "></div>
+		  <div class="btn"></div>
+		  <div class="btn "></div>
+		  <div class="btn"></div>
+	  </div>
+	  <div class="container">
+		  <div class="btn selected"></div>
+		  <div class="btn "></div>
+		  <div class="btn"></div>
+		  <div class="btn "></div>
+		  <div class="btn"></div>
+	  </div>
+	  </div>
+
+	<script>
+
+	cols = ["Sleep", "Work", "Fitness", "Diet", "Projects", "Social"];
+	data = [];
+	dates = [];
+
+	function display()
+	{
+		var src = '';
+		for(let row = data.length - 1; row >= 0 ; row --)
+		{
+			src += '<div class="container">';
+			for(let i=0; i< cols.length; i++)
+			{
+				src += '<div onclick="toggle(' + row +',' + i + ')" class="btn';
+				if(data[row][i])
+				{
+					src += ' selected';
+				}
+				src += '">';
+				if(row == data.length - 1)
+				{
+					src += cols[i];
+				}
+				src += '</div>';
+			}
+			src += '</div>';
+		}
+		var stage = document.getElementById("stage");
+		stage.innerHTML = src;
+	}
+
+	function load()
+	{
+		data = JSON.parse(localStorage.getItem('data'));
+		strDates = JSON.parse(localStorage.getItem('dates'));
+		dates = [];
+		if(strDates != null)
+		{
+			for(let i=0; i<strDates.length; i++)
+			{
+				dates.push(new Date(strDates[i]));
+			}
+		}
+	}
+
+	function save()
+	{
+		localStorage.setItem('data', JSON.stringify(data));
+		let strDates = [];
+		for(let i=0; i<dates.length; i++)
+		{
+			strDates.push(dates[i].toString());
+		}
+		localStorage.setItem('dates', JSON.stringify(strDates));
+	}
+
+	function toggle(row, col)
+	{
+		data[row][col] = !data[row][col];
+		display();
+		save();
+	}
+
+	function init()
+	{
+		load();
+		if(data == null)
+		{
+			data = [];
+			dates = [];
+		}
+
+		//make sure we have a row per date up until now
+		//we know they are contiguous since we always fixup before saving
+		//so it can only be that we need to push empty rows
+		let now = new Date();
+		if(dates.length == 0)
+		{
+			dates.push(now);
+		}
+		else
+		{
+			let countDate = dates[dates.length-1];
+			while(countDate.getFullYear() < now.getFullYear()
+						|| countDate.getMonth() < now.getMonth()
+						|| countDate.getDate() < now.getDate())
+			{
+				countDate.setDate(countDate.getDate() + 1);
+				dates.push(countDate);
+			}
+
+		}
+
+		for(let i=data.length; i< dates.length; i++)
+		{
+			let row = [];
+			for(let i=0; i< cols.length; i++)
+			{
+				row.push(false);
+			}
+			data.push(row);
+		}
+		display();
+	}
+	init();
+
+		  /*
+		  var count = parseInt(localStorage.getItem('count'));
+		  if(count == null)
+		  {
+						count = 1;
+			}
+		  else
+		  {
+						count += 1;
+					}
+
+		  localStorage.setItem('count', count);
+		alert(count);
+		 */
+	  </script>
+  </body>
+</html>
