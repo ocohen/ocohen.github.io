@@ -84,8 +84,8 @@
 		const app = new PIXI.Application({width:100, height:100, resolution:1});
 		const menu = document.getElementById('menu');
 		const wrapper = menu.parentNode;
-		//wrapper.insertBefore(app.view, menu);
-		document.body.appendChild(app.view);
+		wrapper.insertBefore(app.view, menu);
+		//document.body.appendChild(app.view);
 
 		//make the stage fit to entire window
 		app.renderer.backgroundColor = 0xcccccc;
@@ -103,9 +103,9 @@
 
 		function setup()
 		{
-			for(x =0; x<10; x++)
+			for(x =-50; x<50; x++)
 			{
-				for(y=0; y<10; y++)
+				for(y=-50; y<50; y++)
 				{
 					let cactus = new PIXI.Sprite(PIXI.Loader.shared.resources["Cactus.png"].texture);
 
@@ -119,7 +119,8 @@
 
 			stats = new PIXI.Text('This is a PixiJS text',{fontFamily : 'Arial', 
 						fontSize: 20, fill : 0x000000, align : 'left'});
-			stats.x = 0;
+			stats.x = 200;
+			stats.y = 20;
 			app.stage.addChild(stats);
 			app.ticker.add((dt) => gameLoop(dt));
 
@@ -134,7 +135,6 @@
 			avg += app.ticker.FPS;
 			stats.text = (avg / avgCount).toFixed(2) + " fps";
 
-					return;
 			for(i =0; i < cactuses.length; i++)
 			{
 				let cactus = cactuses[i];
