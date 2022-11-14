@@ -1,0 +1,181 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Gaussian Elimination with Partial Pivoting</title><link rel="stylesheet" type="text/css" href="style.css"></head><body><div class="column_wide"><div class="header"><a href="index.html">Home</a></div><hr><div class="content"><h2>Gaussian Elimination with Partial Pivoting</h2>
+<input type="range" id="dimensions" name="dimensions"
+         min="1" max="100" value="3" onchange="setDimensions(this.value)" oninput="setDimensions(this.value)">
+  <label for="dimensions" id="lblDimensions"></label>
+
+<div id="matrix"></div>
+<div><br>Solution</div>
+<div id="x"></div>
+
+<script>
+
+var numDimensions = 0;
+var row_vals = [];
+var b_vals = [];
+var x = [];
+
+function solve()
+{
+    let a = [];
+    let b = [];
+    var n = numDimensions;
+
+    for(let i=0; i < n; i+= 1)
+    {
+        let row = []
+        for(let j=0; j < n; j+= 1)
+        {
+            row.push(Number(row_vals[i][j]));
+        }
+        a.push(row);
+        b.push(Number(b_vals[i]));
+    }
+    var matrix_order = [];
+    for(var j=0; j<n; j += 1)
+    {
+        matrix_order.push(j);   //no pivoting at first
+    }
+
+    for(var j=0; j<n; j += 1)
+    {
+        //for each column do pivoting
+        let maxMag = Math.abs(a[matrix_order[j]][j]);
+        let maxRow = j;
+        for(var i = j+1; i < n; i+= 1)
+        {
+            let absVal = Math.abs(a[matrix_order[i]][j]);
+            if(absVal > maxMag)
+            {
+                maxMag = absVal;
+                maxRow = i;
+            }
+        }
+
+        if(maxRow != j)
+        {
+            //pivot is needed
+            matrix_order[j] = maxRow;
+            matrix_order[maxRow] = j;
+        }
+
+        let curVal = a[matrix_order[j]][j];
+        if(curVal == 0)
+        {
+            //cannot solve
+            return false;
+        }
+
+        let inv = 1 / curVal;
+
+        //now eliminate anything below this column
+        for(var i = j+1; i < n; i+= 1)
+        {
+            let val = a[matrix_order[i]][j];
+            let coeff = inv * val;
+            a[matrix_order[i]][j] = 0;
+            for(var k = j + 1; k < n; k += 1)
+            {
+                a[matrix_order[i]][k] -= coeff * a[matrix_order[j]][k];
+            }
+            b[matrix_order[i]] -= coeff * b[matrix_order[j]];
+        }
+    }
+
+    var y = new Array(n);
+    //back substitute
+    for(var i = n - 1; i >= 0; i -= 1)
+    {
+        let s = b[matrix_order[i]];
+        for(var j = i + 1; j < n; j += 1)
+        {
+            s -= y[j] * a[matrix_order[i]][j];
+        }
+        y[i] = s / a[matrix_order[i]][i];
+        //x[matrix_order[i]] = y[i];
+        x[i] = y[i];
+    }
+
+    return true;
+}
+
+function solveDisplay()
+{
+    if(solve())
+    {
+        let x_str = '[';
+        for(var i= 0; i < numDimensions; i += 1)
+        {
+            x_str += x[i].toString();
+            if(i < numDimensions-1){ x_str += ", ";}
+        }
+        x_str += ']<sup>T</sup>';
+        document.getElementById("x").innerHTML = x_str;
+    }
+    else
+    {
+        document.getElementById("x").innerHTML = "cannot solve";
+    }
+}
+
+
+function updateMatrix(i, j, val)
+{
+    row_vals[i][j] = val;
+    solveDisplay();
+}
+
+function updateB(i, val)
+{
+    b_vals[i] = val;
+    solveDisplay();
+}
+
+function setDimensions(n)
+{
+    for(var i=0; i< n; i+= 1)
+    {
+        if(i >= row_vals.length)
+        {
+            row_vals.push([]);
+        }
+
+        for(var j=row_vals[i].length; j < n; j += 1)
+        {
+            row_vals[i].push(i == j ? 1 : 0);
+        }
+
+        if( i >= b_vals.length)
+        {
+            b_vals.push(0);
+        }
+    }
+
+    document.getElementById("lblDimensions").innerHTML = n;
+    var str = "";
+    for(var i=0; i < n; i+= 1)
+    {
+        str += '<div id="matrix_row">';
+        for(var j=0; j < n; j+= 1)
+        {
+            str += '<input id="a' + i + '_' + j + '" value="' + row_vals[i][j] + '" size="3" onchange="updateMatrix('+i+','+j+',this.value)"/> x<sub>' + (j+1) + '</sub>';
+            if(j < n-1)
+            {
+                str += " + ";
+            }
+        }
+
+        str += ' = <input id="b' + i + '" value="' + b_vals[i] + '" size="3" onchange="updateB('+i+',this.value)"/>';
+
+        str += '</div>';
+    }
+    document.getElementById("matrix").innerHTML = str;
+
+    numDimensions = n;
+    solveDisplay();
+}
+
+setDimensions(3);
+
+</script>
+
+<script type="text/javascript" src="math.js"></script><div class="footer">Nov 14 2022<br /><a href="index.html">Home</a></div></div></div></body></html>
