@@ -156,5 +156,8 @@ plotGrid = function(canvas, tl, br, color)
 document.addEventListener("DOMContentLoaded", function()
 {
     init();
-    setInterval(update, h);
+    if(typeof update !== 'undefined')
+    {
+        setInterval(update, h);
+    }
 });

@@ -1,0 +1,332 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Gradient Descent</title><link rel="stylesheet" type="text/css" href="style.css"></head><body><div class="column_wide"><div class="header"><a href="index.html">Home</a></div><hr><div class="content"><h2>Gradient Descent</h2>
+<canvas width=400 height=400 id="graph" style="background-color:#ffffff"></canvas>
+<canvas width=400 height=400 id="error" style="background-color:#ffffff"></canvas>
+
+<div id="dimensions"></div>
+<div id="seeds"></div>
+<div id="steps">Steps <input type="range" min="50" max="250000" value="300"
+    onchange="setNumSteps(this.value)" oninput="setNumStepsPreview(this.value)"> <span id="numStepsPreview">300</span> </div>
+
+<div id="learning">Learn Rate <input type="range" min="1" max="100" value="10"
+    onchange="setLearningRate(this.value)" oninput="setLearningRatePreview(this.value)"> <span id="learningRatePreview">0.1</span> </div>
+
+<button onclick="clearAndRender()">Clear</button><button onclick="solveAndRender()">Solve</button>
+
+<script>
+var canvas = undefined;
+var canvas_err = undefined;
+let width = 400;
+var points = [[100,200], [300, 300]];
+let all_errors;
+let d  = 2;
+let all_coeffs;
+var a0;
+var a1;
+var a2;
+var a3;
+let learn_rate = 0.1;
+let num_steps = 300;
+let minError2 = 0.0000001;
+let num_bisected = 10;
+let num_seeds = 10;
+
+computeError2 = function(coeffs, partials, alpha)
+{
+    let error2 = 0;
+    for(let i=0; i<points.length; i+= 1)
+    {
+        let x = points[i][0] / width;
+        let y = points[i][1] / width;
+        let val = 0;
+        let exp = 1;
+        for(let j=0; j<d; j+= 1)
+        {
+            val += (coeffs[j] - partials[j]*alpha) * exp;
+            exp *= x;
+        }
+        let residual = val - y;
+        error2 += residual * residual;
+    }
+    return error2;
+}
+
+findMinErrorAlpha = function(coeffs, partials, start, end)
+{
+    let diff = end - start;
+
+    if(end - start < 0.01)
+    {
+        //stop searching just return end point
+        return end;
+    }
+
+    let minError2Seen = 999999999999;
+    let minErrorAlpha = start;
+    let step_size = diff / (num_bisected - 1);
+    //try to find smallest point along line
+    for(let i = 0; i<num_bisected; i+=1)
+    {
+        let alpha = start + i * step_size;
+        let prevAlpha = start + (i-1) * step_size;
+        let error2 = computeError2(coeffs, partials, alpha);
+        if(isNaN(error2))
+        {
+            return findMinErrorAlpha(coeffs, partials, start, prevAlpha);
+        }
+        if(error2 <= minError2)
+        {
+            return alpha;
+        }
+        else if(error2 < minError2Seen)
+        {
+            minError2Seen = error2;
+            minErrorAlpha = alpha;
+        }
+    }
+    
+    return minErrorAlpha;
+}
+
+solve_one = function(coeffs, errors)
+{
+    plot = new Array(points.length);
+
+    //solve function
+    //for each point we evaluate f(x) and get an error (f(x) - y_i)^2
+    //f(x) = \sum a_j x^j
+    //so each term of error function is (\sum a_j x^j - y_i)^2
+    //partials for each a_j is
+    //2(\sum a_j x^j -y_i) x^j
+    //so if error function is residual^2, partial is 2residual x^j
+    for(let i=0; i<d; i+= 1)
+    {
+        coeffs[i] = Math.random() * 100 - 100;
+    }
+    
+    let partials = new Array(d);
+
+    for(let step = 0; step < num_steps; step += 1)
+    {
+        for(let i = 0; i<d; i+= 1)
+        {
+            partials[i] = 0;
+        }
+
+        let error2 = 0;
+        for(let i = 0; i < points.length; i+= 1)
+        {
+            //normalize points from 0-1
+            let x = points[i][0] / width;
+            let y = points[i][1] / width;
+            let residual = 0;
+            let exp = 1;
+            for(let j=0; j<d; j+= 1)
+            {
+                residual += coeffs[j] * exp;
+                exp *= x;
+            }
+
+            residual -= y;
+            error2 += residual*residual;
+
+            exp = 1;
+            for(let j=0; j<d; j+= 1)
+            {
+                partials[j] += 2*residual*exp;
+                exp *= x;
+            }
+        }
+
+        //need to find step size by bisecting
+        let alpha = findMinErrorAlpha(coeffs, partials, 0, learn_rate);
+
+        for(let i=0; i<d; i+= 1)
+        {
+            coeffs[i] -= partials[i] * alpha;
+        }
+        errors[step] = Math.sqrt(error2)*width;
+    }
+
+}
+
+solve = function()
+{
+    all_coeffs = new Array(num_seeds);
+    all_errors = new Array(num_seeds);
+    for(let i=0; i<num_seeds; i+= 1)
+    {
+        all_coeffs[i] = new Array(d);
+        all_errors[i] = new Array(num_steps);
+    
+        solve_one(all_coeffs[i], all_errors[i]);
+    }
+}
+
+render = function()
+{
+    clear(canvas);
+    clear(canvas_err);
+
+    for(let i = 0; i < points.length; i+=1)
+    {
+        let color = 'red';
+        drawPoint(canvas, points[i], color, 2);
+    }
+
+    let minK = 0;
+    let minErrorSeen = 999999;
+    for(let k=0; k < num_seeds; k+= 1)
+    {
+        let error = all_errors[k][num_steps-1];
+        if(error < minErrorSeen)
+        {
+            minErrorSeen = error;
+            minK = k;
+        }
+    }
+
+    //for(let k=0; k < num_seeds; k+= 1)
+    let k = minK;
+    {
+        let coeffs = all_coeffs[k];
+        //draw function
+        for(let i = 0; i < width - 1; i+= 1)
+        {
+            let x = i / width;
+            let x1 = (i+1) / width;
+            let exp = 1;
+            let exp1 = 1;
+            let y_0 = 0;
+            let y_1 = 0;
+            for(let j=0; j<d; j+= 1)
+            {
+                y_0 += coeffs[j] * exp;
+                y_1 += coeffs[j] * exp1;
+                exp *= x;
+                exp1 *= x1;
+            }
+
+            y_0 *= width;
+            y_1 *= width;
+            drawLine(canvas, [i, y_0], [i+1, y_1], 'black');
+        }
+
+        //draw error
+        let errors = all_errors[k];
+
+        let mult = Math.ceil(errors.length / width);
+        for(let i = 0; i < errors.length - mult; i+= mult)
+        {
+            let x = i / errors.length * width;
+            let x1 = (i+mult) / errors.length * width;
+            let y_0 = width - errors[i];
+            let y_1 = width - errors[i+mult];
+            drawLine(canvas_err, [x, y_0], [x1, y_1], 'black');
+        }
+    }
+}
+
+solveAndRender = function()
+{
+    if(points.length > 0)
+    {
+        solve();
+        render();
+    }
+    else
+    {
+        clear(canvas);
+        clear(canvas_err);
+    }
+}
+
+getMousePosition = function(event)
+{
+    let rect = canvas.getBoundingClientRect();
+    let x = event.clientX - rect.left;
+    let y = event.clientY - rect.top;
+    return [x,y];
+}
+
+setDimensions = function(newD)
+{
+    d = Number(newD) + 1;
+    solveAndRender();
+}
+
+setNumSeeds  = function(newNum)
+{
+    num_seeds = Number(newNum);
+    solveAndRender();
+}
+
+setNumSteps  = function(newNum)
+{
+    num_steps = Number(newNum);
+    solveAndRender();
+}
+
+setNumStepsPreview  = function(newNum)
+{
+    document.getElementById("numStepsPreview").innerHTML = newNum;
+}
+
+setLearningRate  = function(newNum)
+{
+    learn_rate = Number(newNum) / 100;
+    solveAndRender();
+}
+
+setLearningRatePreview  = function(newNum)
+{
+    document.getElementById("learningRatePreview").innerHTML = Number(newNum) / 100;
+}
+
+
+srcHelper = function(label, min, max, defValue, funcName)
+{
+    let src = label + ' <select onchange="' + funcName + '(this.value)">';
+    for(let i=min; i<=max; i+= 1)
+    {
+        if(i == defValue)
+        {
+            src += '<option value="' + i + '" selected>'+i+'</option>';
+        }
+        else
+        {
+            src += '<option value="' + i + '">'+i+'</option>';
+        }
+    }
+    src += '</select>';
+    return src;
+}
+
+clearAndRender = function()
+{
+    points = new Array(0);
+    solveAndRender();
+}
+
+init = function()
+{
+    document.getElementById("dimensions").innerHTML = srcHelper('Dimensions', 0, 32, d-1, 'setDimensions');
+    document.getElementById("seeds").innerHTML = srcHelper('Seeds', 1, 1024, num_seeds, 'setNumSeeds');
+
+    canvas = document.getElementById("graph");
+    canvas_err = document.getElementById("error");
+
+    canvas.addEventListener("mousedown", function(e)
+    {
+        let p = getMousePosition(e);
+        points.push(p);
+        solve();
+        render();
+    });
+
+    solveAndRender();
+}
+
+</script>
+
+<script type="text/javascript" src="draw.js"></script>
+<script type="text/javascript" src="math.js"></script><div class="footer">Nov 25 2022<br /><a href="index.html">Home</a></div></div></div></body></html>
