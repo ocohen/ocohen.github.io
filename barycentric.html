@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+    body {
+        font-size: 20px;
+        font-family: "Times New Roman", Times, serif;
+    }
+    .latex-inline {
+        position: relative;
+        top:8px;
+    }
+</style>
+<title>
+    Barycentric Coordinates
+</title>
+</head>
+
+<body>
+    <div>
+        <a href="index.html">Home</a>
+    </div>
+    <h1>Barycentric Coordinates</h1>
+<div class="content">
+    
+<p>Given a triangle <img src="hashed/560bb12c21a43997777471684c6f3983561ac6dedbb422090a52951bae64fc521.png" width="75" height="27" class="latex-inline" />, we can write any planar point <img src="hashed/5c413cd27a79cfeea108e1aed1b6c819199d85cd3b2ef04204c1d2c2b5a0eff26.png" width="189" height="30" class="latex-inline" /> where
+<img src="hashed/5c090be238cde65f1a27f479ce65212142a1bfc057a4859b3c10da70060903014.png" width="135" height="23" class="latex-inline" /></p>
+<p>Furthermore:
+<img src="hashed/540c979341be5d31ed9f6f4296051740e8b0b91441c0ba4b73c9e6599fe322d92.png" width="724" height="38" style="display:block" /></p>
+<p>Where <img src="hashed/542f2cb3f8f2cf349fec34e5781c24691556b607ba7e2428d1f492e0341ded114.png" width="105" height="27" class="latex-inline" /> are the ratios of the signed areas</p>
+<p><img src="hashed/5ca48a89bb631c95c1b26dd13d02750a29d92e85d8eae8503e75da16e85244787.png" width="724" height="57" style="display:block" /></p>
+<h2>Proof</h2>
+<p>We'll prove this for a triangle, but a similar proof generalizes for a simplex of any dimension</p>
+<p><img src="hashed/5a796c78dc6f9bbedc978b27c67c3ffa906ca1d6c7b5e3b7b9d2b0e13324d1519.png" width="724" height="164" style="display:block" /></p>
+<p>We can subtract <img src="hashed/53076d00c443828e7c95f9a46b08ffb935d858b652c55418ee85d0ba8db2b480a.png" width="24" height="28" class="latex-inline" /> from both sides to get <img src="hashed/5a8e37b5a7338599af27f84def2732f639c822e3620b1e634edeecb074c32d51b.png" width="292" height="33" class="latex-inline" />
+which treats <img src="hashed/53076d00c443828e7c95f9a46b08ffb935d858b652c55418ee85d0ba8db2b480a.png" width="24" height="28" class="latex-inline" /> as the origin and highlights that we only have two degrees of freedom. So to simplify:
+<img src="hashed/590dd5890fe9fa9ab9f3e409de4f789e4f24c0411ec3cc7ddbdc3dc8db3b9d52f.png" width="724" height="164" style="display:block" /></p>
+<p>Which gives <img src="hashed/562416fd6a12c0e8aafe01009791d89a354f2eafd33487bb9070f33db0613655f.png" width="116" height="32" class="latex-inline" /> and can be written in matrix form</p>
+<p><img src="hashed/5ac79d6241180467cc6ee7da58fd3d3c64c0cdc69f71f5c6654a1905c2d5865e2.png" width="724" height="60" style="display:block" /></p>
+<p>This can be solved using Cramer's rule:</p>
+<p><img src="hashed/5bdc5d17a2bc8e7320cabe72d8e188f9b54da628fcb26df9196f62fe27e20f7f0.png" width="724" height="116" style="display:block" /></p>
+<p>But recall that each determinant is the signed area of the parallelogram spanned by its column vectors and so</p>
+<p><img src="hashed/55056e07cf4810a107b4a1f92f73774f92554d2c6d4491533f45528ccff59a32d.png" width="724" height="116" style="display:block" /></p>
+<p>To show that <img src="hashed/5232e8a623f901affa2a978d2d1522bceb41f6123ccfcd8c7c732d92a7f01d726.png" width="106" height="37" class="latex-inline" /> consider that given any non-degenerate triangle <img src="hashed/560bb12c21a43997777471684c6f3983561ac6dedbb422090a52951bae64fc521.png" width="75" height="27" class="latex-inline" /> and a fixed planar point <img src="hashed/558f5f130abbe411ba58d010849d9ee90b03e3c4b1f5bd3982e1db3a1633222bc.png" width="24" height="22" class="latex-inline" /> we can compute the signed area: <img src="hashed/5ec321b1dc88c182ed74f50490aa581d6b492e5fa85e548a9a8333f20b8d8c4ca.png" width="724" height="226" style="display:block" /></p>
+<h1></h1>
+
+    </div>
+    <div>
+        <a href="index.html">Home</a>
+    </div>
+</body>
+</html>
