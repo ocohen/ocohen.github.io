@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+    body {
+        font-size: 20px;
+        font-family: "Times New Roman", Times, serif;
+    }
+    .latex-inline {
+        position: relative;
+        top:8px;
+    }
+</style>
+<title>
+    Signed Area
+</title>
+</head>
+
+<body>
+    <div>
+        <a href="index.html">Home</a>
+    </div>
+    <h1>Signed Area</h1>
+<div class="content">
+    
+<input type="range" min="-2" max="2" value="0" id="minValue">
+<label id="areaLbl" for="minValue">Area</label>
+<br />
+<canvas width=300 height=250 id="triangle" style="border:1px solid black"></canvas>
+<script>
+
+let canvas = undefined;
+let pts = [[50, 50], [250, 50], [250, 100], [150, 200], [50,200]]
+let samples = []
+let samplesData = [];
+
+computeArea = function(v)
+{
+	let area = v[1][0]*v[2][1]-v[1][1]*v[2][0]
+			  -v[0][0]*v[2][1] + v[0][1]*v[2][0]
+			  +v[0][0]*v[1][1]-v[0][1]*v[1][0];
+	return area;
+}
+
+computeArea2 = function(a,b)
+{
+	let area = a[0]*b[1] - a[1]*b[0];
+	return area;
+}
+
+vec2_plus = function(a,b)
+{
+	return [a[0]+b[0], a[1]+b[1]];
+}
+
+vec2_minus = function(a, b)
+{
+	return [a[0]-b[0], a[1]-b[1]];
+}
+
+vec2_orthogonal = function(a)
+{
+	return [-a[1], a[0]];
+}
+
+vec2_len2 = function(a)
+{
+	return a[0]*a[0] + a[1]*a[1];
+}
+
+vec2_distance2 = function(a,b)
+{
+	return vec2_len2(vec2_minus(a,b));
+}
+
+vec2_len = function(a)
+{
+	return Math.sqrt(vec2_len2(a));
+}
+
+vec2_scale = function(a,k)
+{
+	return [a[0]*k,a[1]*k];
+}
+
+vec2_normal = function(a)
+{
+	len = vec2_len(a);
+	return [a[0]/len, a[1]/len];
+}
+
+vec2_dot = function(a,b)
+{
+	return a[0]*b[0] + a[1]*b[1];
+}
+
+vec2_copy = function(a)
+{
+	return [a[0], a[1]];
+}
+
+vec3_dot = function(a,b)
+{
+	return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+}
+
+vec3_cross = function(a,b)
+{
+	return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+}
+
+vec3_len2 = function(a)
+{
+	return vec3_dot(a,a);
+}
+
+vec3_len = function(a)
+{
+	return Math.sqrt(vec3_len2(a));
+}
+
+vec3_scale = function(a, k)
+{
+	return [a[0]*k, a[1]*k, a[2]*k];
+}
+
+vec3_normal = function(a)
+{
+	inv = 1 / vec3_len(a);
+	return vec3_scale(a, inv);
+}
+
+box2_init = function(pts)
+{
+	//assumes at least one point is given
+	box = [vec2_copy(pts[0]), vec2_copy(pts[0])];
+	for(let i =1; i< pts.length; i++)
+	{
+		for(let j = 0; j < 2; j++)
+		{
+			box[0][j] = Math.min(box[0][j], pts[i][j]);
+			box[1][j] = Math.max(box[1][j], pts[i][j]);
+		}
+	}
+
+	return box;
+}
+
+snapDown = function(x, k)
+{
+	return Math.floor(x/k) * k;
+}
+
+snapUp = function(x,k)
+{
+	return Math.floor((x+k-1)/k)*k;
+}
+
+pointsToLine = function(p0,p1)
+{
+	//use ax+by+c = 0
+	let p0p1 = vec2_minus(p1,p0);
+	let p0p1Orth = vec2_orthogonal(vec2_normal(p0p1));
+	let c = -vec2_dot(p0p1Orth, p0);
+	return [p0p1Orth[0], p0p1Orth[1], c];
+}
+
+linesIntersection = function(p01, q01)
+{
+	//write p0p1 and q0q1 as ax+by+c = 0
+	//then cross the two
+	let intersect = vec3_cross(p01,q01);
+	if(intersect[2] == 0)
+	{
+		return [];
+	}
+	return vec2_scale(intersect, 1/intersect[2]);
+}
+
+triangleArea = function(a,b,c)
+{
+	let B = vec2_minus(b,a);
+	let C = vec2_minus(c,a);
+	return 0.5*(B[0]*C[1]-B[1]*C[0]);
+}
+
+barycentric = function(a,b,c,p)
+{
+	let abc = triangleArea(a,b,c);
+	if(abc <= 0.001)
+	{
+		return [-1,-1,-1];	//degenerate triangle so always outside
+	}
+	let u = triangleArea(p,b,c) / abc;
+	let v = triangleArea(a,p,c)/abc;
+	let w = 1 - u - v;
+	return [u,v,w];
+}
+
+splatArea = function(a,b, area)
+{
+	let val = area > 0 ? 1 : -1;
+	let o = [0,0];
+	for(let i=0; i < samples.length; i++)
+	{
+		let uvw = [];
+		if(area >= 0)
+		{
+			uvw = barycentric(o,a,b, samples[i]);
+		}
+		else
+		{
+			uvw = barycentric(o,b,a, samples[i]);
+		}
+		if(	uvw[0] >= 0 && uvw[0] <= 1
+			&& uvw[1] >= 0 && uvw[1] <= 1
+			&& uvw[2] >= 0 && uvw[2] <=1)
+		{
+			samplesData[i] -= val;
+		}
+	}
+}
+
+drawTriangleArea = function(v, area)
+{
+	let ctx = canvas.getContext("2d");
+
+	//use bbox to draw area	
+	let box = box2_init(v);
+
+	let v0v1 = pointsToLine(v[0], v[1]);
+	let v1v2 = pointsToLine(v[1], v[2]);
+	let v2v0 = pointsToLine(v[2], v[0]);
+
+	const spacing = 5;
+	if(area > 0)
+	{
+		ctx.beginPath();
+		ctx.strokeStyle = "red";
+		//positive area so draw as horizontal lines
+		//make it global alignment so multiple positive and negative overlap
+		let start = vec2_copy(box[0]);
+		start[1] = snapUp(start[1], spacing);
+		let end = vec2_copy(box[1]);
+		end[1] = snapDown(end[1], spacing);
+
+		let cur = vec2_copy(start);
+		while(cur[1] <= end[1])
+		{
+			//find the start and end points inside the triangle
+			let line = pointsToLine(cur, [end[0], cur[1]]);
+			let pts = [	linesIntersection(line, v0v1),
+						linesIntersection(line, v1v2),
+						linesIntersection(line, v2v0)];
+			
+			let ptsToDraw = [];
+			for(let i =0; i < pts.length; i++)
+			{
+				let uvw = barycentric(v[0], v[1], v[2], pts[i]);
+				if(uvw[0] >= -0.01 && uvw[0] <= 1.01 && uvw[1] >= -0.01 && uvw[1] <= 1.01 && uvw[2] >= -0.01 && uvw[2] <= 1.01)
+				{
+					//check that the point isn't already in there (can happen when line intersects corner)
+					if(ptsToDraw.length == 1)
+					{
+						if(vec2_len(vec2_minus(ptsToDraw[0], pts[i])) > 0.5)
+						{
+							ptsToDraw.push(pts[i]);
+						}
+					}
+					else
+					{
+						ptsToDraw.push(pts[i]);
+					}
+				}
+			}
+
+			
+			if(ptsToDraw.length >= 2)
+			{
+				ctx.moveTo(ptsToDraw[0][0], cur[1]);
+				ctx.lineTo(ptsToDraw[1][0], cur[1]);
+				ctx.stroke();
+			}
+
+			cur[1] += spacing;
+		}
+
+	}
+	else
+	{
+		ctx.beginPath();
+		ctx.strokeStyle = "green"
+		//negative area so draw as vertical lines
+		//make it global alignment so multiple positive and negative overlap
+		let start = vec2_copy(box[0]);
+		start[0] = snapUp(start[0], spacing);
+		let end = vec2_copy(box[1]);
+		end[0] = snapDown(end[0], spacing);
+
+		let cur = vec2_copy(start);
+		while(cur[0] <= end[0])
+		{
+			//find the start and end points inside the triangle
+			let line = pointsToLine(cur, [cur[0], end[1]]);
+			let pts = [	linesIntersection(line, v0v1),
+						linesIntersection(line, v1v2),
+						linesIntersection(line, v2v0)];
+			
+			let ptsToDraw = [];
+			for(let i =0; i < pts.length; i++)
+			{
+				let uvw = barycentric(v[1], v[0], v[2], pts[i]);
+				if(uvw[0] >= -0.001 && uvw[0] <= 1.001 && uvw[1] >= -0.001
+					&& uvw[1] <= 1.001 && uvw[2] >= -0.001 && uvw[2] <= 1.001)
+				{
+					//check that the point isn't already in there (can happen when line intersects corner)
+					if(ptsToDraw.length == 1)
+					{
+						if(vec2_len(vec2_minus(ptsToDraw[0], pts[i])) > 0.5)
+						{
+							ptsToDraw.push(pts[i]);
+						}
+					}
+					else
+					{
+						ptsToDraw.push(pts[i]);
+					}
+				}
+			}
+
+			if(ptsToDraw.length >= 2)
+			{
+				ctx.moveTo(cur[0], ptsToDraw[0][1]);
+				ctx.lineTo(cur[0], ptsToDraw[1][1]);
+				ctx.stroke();
+			}
+
+			cur[0] += spacing;
+		}
+	}
+}
+
+drawTriangle = function(v)
+{
+	let ctx = canvas.getContext("2d");
+	ctx.strokeStyle = "black";
+	ctx.beginPath();
+	ctx.moveTo(v[0][0], v[0][1]);
+	ctx.lineTo(v[1][0], v[1][1]);
+	ctx.lineTo(v[2][0], v[2][1]);
+	ctx.lineTo(v[0][0], v[0][1]);
+	ctx.stroke();
+}
+
+render = function()
+{
+	let ctx = canvas.getContext("2d");
+	let drawMode = parseInt(document.getElementById("minValue").value);
+	document.getElementById("areaLbl").innerHTML = drawMode;
+
+	//clear canvas
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+	//clear sample data
+	for(let i=0; i< samplesData.length; i++)
+	{
+		samplesData[i] = 0;
+	}
+
+	//draw hull
+	for(let i = 0; i < pts.length; i++)
+	{
+		ctx.beginPath();
+		ctx.moveTo(pts[i][0], pts[i][1]);
+	
+		let j = i+1;
+		if(j == pts.length){ j = 0;}
+
+		//update signed area
+		let area = computeArea2(pts[i], pts[j]);
+		if(drawMode == 0)
+		{
+			splatArea(pts[i], pts[j], area);
+			ctx.strokeStyle = "#000000";
+		}
+		else
+		{
+			if(area < 0 && drawMode < 0 || area > 0 && drawMode > 0)
+			{
+				splatArea(pts[i], pts[j], area);
+				ctx.strokeStyle = "#ff0000";
+			}
+			else
+			{
+				ctx.strokeStyle = "#000000";
+			}
+		}
+
+		//draw edges
+		ctx.lineTo(pts[j][0], pts[j][1]);
+		ctx.stroke();
+
+	}
+
+	//sample points
+	ctx.strokeStyle = "#000000";
+
+	for(let i=0; i<samples.length; i++)
+	{
+		if((drawMode == 0 && samplesData[i] != 0)
+			|| (drawMode != 0 && Math.abs(samplesData[i]) >= Math.abs(drawMode)))
+		{
+			ctx.beginPath();
+			ctx.arc(samples[i][0], samples[i][1], 1, 0, 2*Math.PI);
+			ctx.stroke();	
+		}
+	}
+}
+
+getMousePosition = function(event)
+{
+    let rect = canvas.getBoundingClientRect();
+    let x = event.clientX - rect.left;
+    let y = event.clientY - rect.top;
+    return [x,y];
+}
+
+let isDown = false;
+
+initSamples = function()
+{
+	let canvasX = 300;
+	let canvasY = 250;
+	let numSamples = 500;
+	for(let i=0; i< numSamples; i++)
+	{
+		let m = 0.1;
+		let min = 10;
+
+		//generate m*i candidates and pick the one furthest away from existing points
+		let numCandidates = Math.max(min, Math.max(1,i*m));
+		let maxDist2 = 0;
+		let best = [];
+		for(let j = 0; j < numCandidates; j++)
+		{
+			let candidate = [Math.random()*canvasX, Math.random()*canvasY];
+			if(j == 0){ best = candidate; }
+
+			let minDist2 = 999999999;
+			for(let k=0; k < i; k++)
+			{
+				let d2 = vec2_distance2(candidate, samples[k]);
+				if(d2 < minDist2)
+				{
+					minDist2 = d2;
+				}
+			}
+
+			if(minDist2 > maxDist2)
+			{
+				best = candidate;
+				maxDist2 = minDist2;
+			}
+		}
+
+		samples.push(best);
+		samplesData.push(0);
+	}
+}
+
+let selected = undefined;
+
+init = function()
+{
+	initSamples();
+	canvas = document.getElementById("triangle");
+	render();
+
+	document.getElementById("minValue").addEventListener("input", function(e)
+	{
+		render();
+	});
+
+	canvas.addEventListener("mousedown", function(e)
+    {
+    	isDown = true;
+    	let minDist2 = 99999999;
+    	selected = undefined;
+    	let mouse = getMousePosition(e);
+    	for(let i=0; i<pts.length; i++)
+    	{
+    		let d2 = vec2_distance2(pts[i], mouse);
+    		if(d2 <= minDist2)
+    		{
+    			selected = pts[i];
+    			minDist2 = d2;
+    		}
+    	}
+
+    	selected[0] = mouse[0];
+    	selected[1] = mouse[1];
+        render();
+    });
+
+	canvas.addEventListener("mouseup", function(e)
+    {
+    	if(isDown)
+    	{
+    		isDown = false;
+    		if(selected != undefined)
+    		{
+    			let mouse = getMousePosition(e);
+    			selected[0] = mouse[0];
+    			selected[1] = mouse[1];
+    		}
+        	render();
+        }
+    });
+
+
+	canvas.addEventListener("mousemove", function(e)
+    {
+    	if(isDown)
+    	{
+    		if(selected != undefined)
+    		{
+    			let mouse = getMousePosition(e);
+    			selected[0] = mouse[0];
+    			selected[1] = mouse[1];
+    		}
+        	render();
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', init, false);
+
+</script>
+
+
+<p>Given a polygon <img src="hashed/59ef7d0618092320913da7676208de042866a6029afc862d851104577fde0666f.png" width="90" height="29" class="latex-inline" />, the area of <img src="hashed/558f5f130abbe411ba58d010849d9ee90b03e3c4b1f5bd3982e1db3a1633222bc.png" width="24" height="22" class="latex-inline" /> can be computed by iterating over all edges <img src="hashed/5809b7209e588768b36fc3a655434f991d1840d83ef962408d04ac3f0fe3a3893.png" width="85" height="29" class="latex-inline" /> and accumulating the signed area of the triangles <img src="hashed/59ff1406f1dc5838f0f05abda641b03ad9913f3a4886baee2a0b9c94dd3b7ed05.png" width="119" height="29" class="latex-inline" />. The intuition for why this works is that the signed areas outside the hull (and any overlaps) all cancel out.</p>
+<p>The above demo shows this and works as follows: A slider value of 0 shows the net area after all canceling is done. A positive value shows all sample points with at least that positive value, while a negative value shows all sample points with at most that negative value. For the positive and negative values, the contributing edges are marked in red. You can see that even for complex concaves with multiple overlapping triangles, the net result is the interior hull of the polygon.</p>
+<h2>Proof</h2>
+<p>We'll use induction to show that this is true. We start with a triangle <img src="hashed/560bb12c21a43997777471684c6f3983561ac6dedbb422090a52951bae64fc521.png" width="75" height="27" class="latex-inline" />. We want to show that</p>
+<p><img src="hashed/545c8d57b6ca60d5aa596559595bf8edd48964b2227d0db472abcb9d099340713.png" width="724" height="37" style="display:block" /></p>
+<p>Where the sum is with respect to the signed areas. Notice that the triangles on the right side all use the origin as a vertex. We can think of these as pairs of vectors that start at the origin.</p>
+<p>Given any triangle <img src="hashed/5eff432f3df207586916128d671aa8e6251ae3c4b622a4a9e9e4914aff656ea4d.png" width="73" height="27" class="latex-inline" /> we can write its area in terms of the parallelogram spanned by <img src="hashed/573d6ab66c3ba4a5597a9be043625d07e0c7f93dfa5560f087ddfe0d677e0f300.png" width="24" height="28" class="latex-inline" /> and <img src="hashed/535b56f7ffe45448e87753ec783d3d528237341d3ac4c576ff92f45e152c9571d.png" width="22" height="28" class="latex-inline" /></p>
+<p><img src="hashed/5826b20b1d42b5fd1f6f50d8c75381cd31038ed9c48861e2cc87364f583435b90.png" width="884" height="131" style="display:block" /></p>
+<p>We can compute the area of <img src="hashed/560bb12c21a43997777471684c6f3983561ac6dedbb422090a52951bae64fc521.png" width="75" height="27" class="latex-inline" /> in the same way if we use <img src="hashed/53076d00c443828e7c95f9a46b08ffb935d858b652c55418ee85d0ba8db2b480a.png" width="24" height="28" class="latex-inline" /> as the origin.</p>
+<p><img src="hashed/5a01c481636ab4c8278f5701ec3d6fe71777d7be0ed45c2c7fa5808ba33d5eb5a.png" width="830" height="266" style="display:block" /></p>
+<p>This proves the base case, now assume we have a polygon with <img src="hashed/5fa44b946781f40312afd776e5bc14757a8e10f28b706100b5920fe56d900a388.png" width="21" height="17" class="latex-inline" /> edges such that the area of the polygon is the sum of the area of the triangles <img src="hashed/5574dbbf9a84d144219361337adddbfafc5207835a62b3901c4a2e62ea48e88a7.png" width="119" height="29" class="latex-inline" />. If we add a vertex we will have to split an edge. Let's say we split an edge <img src="hashed/59d777512693bcdc511d72e3d0afdb88c8e07aa4f7c6041243e08066be339cc8b.png" width="40" height="22" class="latex-inline" /> and we label the new vertex <img src="hashed/54612fdea6e5bac88836f7ca9db312a3643d98540d14ae0abdfda71e8c5f9980b.png" width="25" height="22" class="latex-inline" />. This removes the edge <img src="hashed/59d777512693bcdc511d72e3d0afdb88c8e07aa4f7c6041243e08066be339cc8b.png" width="40" height="22" class="latex-inline" /> and replaces it with two new edges <img src="hashed/53b253c4e54e29cea1f25bc7f5d2758dfda89420aa1a188f0f791f47a1870f1c8.png" width="40" height="22" class="latex-inline" /> and <img src="hashed/51813e1f0ef06f14e331a65731f8e56655d3cc015c1053fb60952f293f82f747b.png" width="41" height="22" class="latex-inline" />.</p>
+<p>We want to prove that the area of the new hull is the sum of triangles <img src="hashed/5574dbbf9a84d144219361337adddbfafc5207835a62b3901c4a2e62ea48e88a7.png" width="119" height="29" class="latex-inline" /> for all <img src="hashed/50ac9a4e10980d4687c9282e7e7a49a601bd3d76bc34b1b0cefa92de6ea0fb226.png" width="56" height="23" class="latex-inline" /> edges. Notice that geometrically no matter how <img src="hashed/59d777512693bcdc511d72e3d0afdb88c8e07aa4f7c6041243e08066be339cc8b.png" width="40" height="22" class="latex-inline" /> is split, the new polygon is the same as the old one, with the additional consideration of a new triangle <img src="hashed/560bb12c21a43997777471684c6f3983561ac6dedbb422090a52951bae64fc521.png" width="75" height="27" class="latex-inline" /> where the orientation of this new triangle determines if the triangle is &quot;added&quot; or &quot;removed&quot; from the original hull. This corresponds to how pulling <img src="hashed/54612fdea6e5bac88836f7ca9db312a3643d98540d14ae0abdfda71e8c5f9980b.png" width="25" height="22" class="latex-inline" /> away from <img src="hashed/59d777512693bcdc511d72e3d0afdb88c8e07aa4f7c6041243e08066be339cc8b.png" width="40" height="22" class="latex-inline" /> adds area, while pushing <img src="hashed/54612fdea6e5bac88836f7ca9db312a3643d98540d14ae0abdfda71e8c5f9980b.png" width="25" height="22" class="latex-inline" /> towards <img src="hashed/59d777512693bcdc511d72e3d0afdb88c8e07aa4f7c6041243e08066be339cc8b.png" width="40" height="22" class="latex-inline" /> removes area.</p>
+<p>As a result, the only aspect of the original polygon that changes is the edge <img src="hashed/59d777512693bcdc511d72e3d0afdb88c8e07aa4f7c6041243e08066be339cc8b.png" width="40" height="22" class="latex-inline" /> and so the total area is the same as before, but with a change to the area of the triangle <img src="hashed/59b554903e6513596ecd6166d899c4107ff270d46b4f587372d33b45956ff16af.png" width="75" height="27" class="latex-inline" /></p>
+<p>In fact, <img src="hashed/59b554903e6513596ecd6166d899c4107ff270d46b4f587372d33b45956ff16af.png" width="75" height="27" class="latex-inline" /> is no longer used, it has been split up into two new triangles. The new area is then <img src="hashed/56ad8397012cfe7cbaf416907f8a77a5d1827e23438328cdac32499d53b4a9f4a.png" width="728" height="27" class="latex-inline" /></p>
+<p>But this is just the area of the triangles of the two new edges, and so this new polygon with <img src="hashed/50ac9a4e10980d4687c9282e7e7a49a601bd3d76bc34b1b0cefa92de6ea0fb226.png" width="56" height="23" class="latex-inline" /> edges has an area equal to the sum of triangles <img src="hashed/5574dbbf9a84d144219361337adddbfafc5207835a62b3901c4a2e62ea48e88a7.png" width="119" height="29" class="latex-inline" /> and we are done</p>
+<h2>3D (no proof)</h2>
+<p>The same idea can be applied to compute the volume of any 3D mesh by iterating over all triangles and accumulating the tetrahedrons <img src="hashed/5dbc8d4ad2bdb4f9f2bb095976002a5ff5ba712dcea8c5acab6f962d4816a5e90.png" width="139" height="29" class="latex-inline" />. The proof is very similar, we start with a tetrahedron as the base case and show how it can be expanded.</p>
+<h1></h1>
+
+    </div>
+    <div>
+        <a href="index.html">Home</a>
+    </div>
+</body>
+</html>
