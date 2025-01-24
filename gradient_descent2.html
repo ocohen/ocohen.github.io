@@ -59,6 +59,7 @@ var curve = [];
 let all_errors;
 let d  = 2;
 let finalPos = [0,0];
+let firstPos = [0,0];
 let learn_rate = 0.1;
 let num_steps = 10000;
 let mouseDown = false;
@@ -158,6 +159,8 @@ solve = function()
     }
 
     finalPos = [Math.random()*400,Math.random()*400];
+    firstPos[0] = finalPos[0];
+    firstPos[1] = finalPos[1];
     all_errors = new Array(num_steps);
     solve_adam(finalPos, all_errors, cost, cost_grad, projection);
 }
@@ -173,7 +176,9 @@ render = function()
         drawPoint(canvas, points[i], color, 2);
     }
 
-    drawPoint(canvas, finalPos, 'green', 10);
+    drawLine(canvas, firstPos, finalPos, 'black', 4);
+    drawPoint(canvas, firstPos, 'red', 4);
+    drawPoint(canvas, finalPos, 'green', 4);
 
     //draw error
     let errors = all_errors;
