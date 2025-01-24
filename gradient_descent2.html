@@ -1,0 +1,281 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Gradient Descent</title><link rel="stylesheet" type="text/css" href="style.css"></head><body><div class="column_wide"><div class="header"><a href="index.html">Home</a></div><hr><div class="content"><h2>Gradient Descent 2</h2>
+<canvas width=400 height=400 id="graph" style="background-color:#ffffff"></canvas>
+<canvas width=400 height=400 id="error" style="background-color:#ffffff"></canvas>
+
+<div id="errorInfo"></div>
+
+<div id="steps">Steps <input type="range" min="50" max="250000" value="2000"
+    onchange="setNumSteps(this.value)" oninput="setNumStepsPreview(this.value)"> <span id="numStepsPreview">2000</span> </div>
+
+<div id="learning">Learn Rate <input type="range" min="1" max="100" value="10"
+    onchange="setLearningRate(this.value)" oninput="setLearningRatePreview(this.value)"> <span id="learningRatePreview">0.1</span> </div>
+
+<button onclick="clearAndRender()">Clear</button><button onclick="solveAndRender()">Solve</button>
+
+<div>Cost function:<br><textarea id="cost" cols="80" rows="6">let d2 = Math.pow(x-200, 2) + Math.pow(y-200, 2);
+let r2 = 100*100;
+Math.pow(d2 - r2, 2)</textarea></div>
+<div>Cost grad [x,y]:<br><textarea id="cost_grad" cols="80" rows="6">let d2 = Math.pow(x-200, 2) + Math.pow(y-200, 2);
+let r2 = 100*100;
+let g = d2 - r2;
+[g*(x-200), g*(y-200)]
+</textarea></div>
+<div>Projection:<br><textarea id="projection" cols="80" rows="6">if(x < 0){ x = 0; }
+if(x > 400){ x = 400; }
+
+if(y < 0){ y = 0; }
+if(y > 400){ y= 400; }
+
+</textarea> </div>
+<div>Finalize:<br><textarea id="finalize" cols="80" rows="6">
+</textarea> </div>
+
+<script>
+
+let stayAwayCost = 'let s = 0;\n' +
+'for(let k = 0; k<points.length; k+= 1)\n' +
+'{\n'+
+'let d2 = Math.pow((x - points[k][0]),2) + Math.pow((y - points[k][1]),2);\n'+
+'if(d2 < 0.001){ d2 == 0.001; }\n'+
+'s += 1/d2;\n'+
+'}\n'+
+'s';
+
+let stayAwayGrad = 'let s = [0,0];\n'+
+'for(let k = 0; k<points.length; k+= 1)\n'+
+'{\n'+
+'let d2 = Math.pow((x - points[k][0]),2) + Math.pow((y - points[k][1]),2);\n'+
+'if(d2 < 0.001){ s=[9999999999,9999999999]; break; }\n'+
+'s[0] += (points[k][0] - x) / (d2*d2);\n'+
+'s[1] += (points[k][1] - y) / (d2*d2);\n'+
+'}\n'+
+'s'
+
+var canvas = undefined;
+var canvas_err = undefined;
+let width = 400;
+var points = [];
+var curve = [];
+let all_errors;
+let d  = 2;
+let finalPos = [0,0];
+let learn_rate = 0.1;
+let num_steps = 2000;
+let mouseDown = false;
+
+poly = function(coeffs, x)
+{
+    let exp = 1;
+    let s = 0;
+    for(let i = 0; i < d; i+= 1)
+    {
+        s += coeffs[i] * exp;
+        exp *= x;
+    }
+
+    return s;
+}
+
+solve_adam = function(theta, errors, cost, cost_grad, theta_project)
+{
+    let b1 = 0.9;
+    let b2 = 0.999;
+    let alpha = learn_rate;
+    let epsilon = 0.00000001;
+
+    let b1t = b1;
+    let b2t = b2;
+
+    let v = 0;
+    let m = new Array(d);
+    let mHat = new Array(d);
+
+    for(let i=0; i<d; i+= 1)
+    {
+        m[i] = 0;
+    }
+    
+    for(let step = 0; step < num_steps; step += 1)
+    {
+        let error = cost(theta, step);
+        let grad = cost_grad(theta, step);
+        let grad2 = 0;
+
+        let biasDenom = 1 / (1-b1t);
+        for(let i = 0; i<d; i+= 1)
+        {
+            grad2 += grad[i]*grad[i];
+            m[i] = b1*m[i] + (1-b1)*grad[i];
+            mHat[i] = m[i] * biasDenom;
+        }
+
+        v = b2*v + (1-b2) * grad2;
+        let vHat = v / (1-b2t);
+
+
+        let denom = 1 / (Math.sqrt(vHat) + epsilon);
+        for(let i=0; i<d; i+= 1)
+        {
+            theta[i] -= alpha * mHat[i] * denom;
+        }
+
+        theta_project(theta);
+
+        b1t *= b1;
+        b2t *= b2;
+
+        errors[step] = error;
+    }
+}
+
+solve = function()
+{
+    let cost_src = document.getElementById("cost").value;
+    let cost = function(theta, step)
+    {
+        let x = theta[0];
+        let y = theta[1];
+        return eval(cost_src);
+    }
+
+    let cost_grad_src = document.getElementById("cost_grad").value;
+    let cost_grad = function(theta, step)
+    {
+        let x = theta[0];
+        let y = theta[1];
+        let grad = eval(cost_grad_src);
+        return grad;
+    }
+
+    let projection_src = document.getElementById("projection").value;
+    let projection = function(theta)
+    {
+        let x = theta[0];
+        let y = theta[1];
+        eval(projection_src);
+        theta[0] = x;
+        theta[1] = y;
+    }
+
+    finalPos = [Math.random()*400,Math.random()*400];
+    all_errors = new Array(num_steps);
+    solve_adam(finalPos, all_errors, cost, cost_grad, projection);
+}
+
+render = function()
+{
+    clear(canvas);
+    clear(canvas_err);
+
+    for(let i = 0; i < points.length; i+=1)
+    {
+        let color = 'black';
+        drawPoint(canvas, points[i], color, 2);
+    }
+
+    drawPoint(canvas, finalPos, 'green', 10);
+
+    //draw error
+    let errors = all_errors;
+
+    let minError = 99999999;
+    let maxError = -9999999;
+
+    for(let i = 0; i<errors.length; i+= 1)
+    {
+        if(minError > errors[i]){ minError = errors[i];}
+        if(maxError < errors[i]){ maxError = errors[i];}
+    }
+
+    let mult = Math.ceil(errors.length / width);
+    for(let i = 0; i < errors.length - mult; i+= mult)
+    {
+        let x = i / errors.length * width;
+        let x1 = (i+mult) / errors.length * width;
+        let y_0 = width * (1 - (errors[i] - minError) / (maxError - minError));
+        let y_1 = width * (1 - (errors[i+mult] - minError) / (maxError - minError));
+        drawLine(canvas_err, [x, y_0], [x1, y_1], 'black');
+    }
+
+    document.getElementById("errorInfo").innerHTML = "Error range:[" + Math.floor(minError) + "," + Math.ceil(maxError) + "]";
+    let finalize_src = document.getElementById("finalize").value;
+    eval(finalize_src);
+}
+
+solveAndRender = function()
+{
+    solve();
+    render();
+}
+
+getMousePosition = function(event)
+{
+    let rect = canvas.getBoundingClientRect();
+    let x = event.clientX - rect.left;
+    let y = event.clientY - rect.top;
+    return [x,y];
+}
+
+setDimensions = function(newD)
+{
+    d = Number(newD) + 1;
+    solveAndRender();
+}
+
+setNumSeeds  = function(newNum)
+{
+    num_seeds = Number(newNum);
+    solveAndRender();
+}
+
+setNumSteps  = function(newNum)
+{
+    num_steps = Number(newNum);
+    solveAndRender();
+}
+
+setNumStepsPreview  = function(newNum)
+{
+    document.getElementById("numStepsPreview").innerHTML = newNum;
+}
+
+setLearningRate  = function(newNum)
+{
+    learn_rate = Number(newNum) / 100;
+    solveAndRender();
+}
+
+setLearningRatePreview  = function(newNum)
+{
+    document.getElementById("learningRatePreview").innerHTML = Number(newNum) / 100;
+}
+
+
+clearAndRender = function()
+{
+    points = new Array(0);
+    solveAndRender();
+}
+
+init = function()
+{
+    document.getElementById("cost").value = stayAwayCost;
+    document.getElementById("cost_grad").value = stayAwayGrad;
+
+    canvas = document.getElementById("graph");
+    canvas_err = document.getElementById("error");
+
+    canvas.addEventListener("mousedown", function(e)
+    {
+        let p = getMousePosition(e);
+        points.push(p);
+        solveAndRender();
+    });
+
+    solveAndRender();
+}
+
+</script>
+
+<script type="text/javascript" src="draw.js"></script>
+<script type="text/javascript" src="math.js"></script><div class="footer">Nov 25 2022<br /><a href="index.html">Home</a></div></div></div></body></html>
